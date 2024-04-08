@@ -1,3 +1,5 @@
+package ShareMemory;
+
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.FileChannel;
