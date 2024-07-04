@@ -1,0 +1,10 @@
+/nologo
+/OUT:bazel-out/x64_windows-fastbuild/bin/simd.exe
+bazel-out/x64_windows-fastbuild/bin/_objs/simd/main.obj
+bazel-out/x64_windows-fastbuild/bin/simd_lib.lib
+/SUBSYSTEM:CONSOLE
+-mavx2
+/MACHINE:X64
+/DEFAULTLIB:msvcrt.lib
+/DEBUG:FASTLINK
+/INCREMENTAL:NO
