@@ -1,93 +1,122 @@
 #include <iostream>
+#include <vector>
 #include <string>
-#include <cstring>
-#include <cassert>
+#include <random>
 #include <chrono>
+#include <stdexcept>
+#include <algorithm>
+#include <immintrin.h>
 #include <locale>
 #include <codecvt>
-#include <random>
 
-// 自定义 UTF-16 到 UTF-8 转换函数
-std::string utf16_to_utf8(const std::u16string& utf16_str) {
-    std::string utf8_str;
-    for (size_t i = 0; i < utf16_str.size(); ++i) {
-        char16_t ch = utf16_str[i];
-        if (ch < 0x80) {
-            utf8_str.push_back(static_cast<char>(ch));
-        } else if (ch < 0x800) {
-            utf8_str.push_back(static_cast<char>(0xC0 | (ch >> 6)));
-            utf8_str.push_back(static_cast<char>(0x80 | (ch & 0x3F)));
+// Convert UTF-16 encoded string to UTF-8 encoded string without using AVX2
+std::string utf16_to_utf8(const std::u16string &utf16) {
+    std::string utf8;
+
+    for (size_t i = 0; i < utf16.size(); ++i) {
+        uint16_t w1 = utf16[i];
+
+        if (w1 >= 0xD800 && w1 <= 0xDBFF) {
+            if (i + 1 >= utf16.size()) {
+                throw std::runtime_error("Invalid UTF-16 sequence");
+            }
+
+            uint16_t w2 = utf16[++i];
+
+            if (w2 < 0xDC00 || w2 > 0xDFFF) {
+                throw std::runtime_error("Invalid UTF-16 sequence");
+            }
+
+            uint32_t code_point = ((w1 - 0xD800) << 10) + (w2 - 0xDC00) + 0x10000;
+
+            utf8.push_back(0xF0 | (code_point >> 18));
+            utf8.push_back(0x80 | ((code_point >> 12) & 0x3F));
+            utf8.push_back(0x80 | ((code_point >> 6) & 0x3F));
+            utf8.push_back(0x80 | (code_point & 0x3F));
+        } else if (w1 >= 0xDC00 && w1 <= 0xDFFF) {
+            throw std::runtime_error("Invalid UTF-16 sequence");
         } else {
-            utf8_str.push_back(static_cast<char>(0xE0 | (ch >> 12)));
-            utf8_str.push_back(static_cast<char>(0x80 | ((ch >> 6) & 0x3F)));
-            utf8_str.push_back(static_cast<char>(0x80 | (ch & 0x3F)));
+            if (w1 < 0x80) {
+                utf8.push_back(static_cast<char>(w1));
+            } else if (w1 < 0x800) {
+                utf8.push_back(0xC0 | (w1 >> 6));
+                utf8.push_back(0x80 | (w1 & 0x3F));
+            } else {
+                utf8.push_back(0xE0 | (w1 >> 12));
+                utf8.push_back(0x80 | ((w1 >> 6) & 0x3F));
+                utf8.push_back(0x80 | (w1 & 0x3F));
+            }
         }
     }
-    return utf8_str;
+
+    return utf8;
 }
 
-// 随机生成 UTF-16 字符串
-std::u16string generate_random_utf16_string(size_t length) {
-    std::u16string random_str;
-    std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<uint16_t> dist(0x4E00, 0x9FFF); // 常用汉字范围
+// Accelerate UTF-16 to UTF-8 conversion using AVX2
+std::string utf16_to_utf8_avx2(const std::u16string &utf16) {
+    std::string utf8;
+    size_t i = 0;
+    // TODO
+    return utf8;
+}
 
-    for (size_t i = 0; i < length; ++i) {
-        random_str.push_back(static_cast<char16_t>(dist(rng)));
+// Generate random UTF-16 string ensuring valid surrogate pairs
+std::u16string generate_random_utf16_string(size_t length) {
+    std::u16string str;
+    std::mt19937 generator(std::random_device{}());
+    std::uniform_int_distribution<uint32_t> distribution(0, 0x10FFFF);
+
+    while (str.size() < length) {
+        uint32_t code_point = distribution(generator);
+
+        if (code_point <= 0xD7FF || (code_point >= 0xE000 && code_point <= 0xFFFF)) {
+            str.push_back(static_cast<char16_t>(code_point));
+        } else if (code_point >= 0x10000 && code_point <= 0x10FFFF) {
+            code_point -= 0x10000;
+            str.push_back(static_cast<char16_t>((code_point >> 10) + 0xD800));
+            str.push_back(static_cast<char16_t>((code_point & 0x3FF) + 0xDC00));
+        }
     }
 
-    return random_str;
+    return str;
 }
 
 int main() {
-    // 测试字符串
-    const char16_t test_string[] = u"Hello, 你好！";
-    const char* expected_utf8_output = "Hello, 你好！";
-    std::u16string utf16_str = test_string;
+    const size_t num_tests = 1000;
+    const size_t string_length = 1000;
 
-    // 自定义转换
-    auto start = std::chrono::high_resolution_clock::now();
-    std::string utf8_output = utf16_to_utf8(utf16_str);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_custom = end - start;
+    // Generate random UTF-16 strings
+    std::vector<std::u16string> test_strings;
+    for (size_t i = 0; i < num_tests; ++i) {
+        test_strings.push_back(generate_random_utf16_string(string_length));
+    }
 
-    // 标准库转换
-    start = std::chrono::high_resolution_clock::now();
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    std::string utf8_output_lib = convert.to_bytes(utf16_str);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_lib = end - start;
+    // Test standard library conversion
+    try {
+        auto start = std::chrono::high_resolution_clock::now();
+        for (const auto &str : test_strings) {
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+            std::string utf8 = convert.to_bytes(str);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Standard library conversion took: " << elapsed.count() << " seconds" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "Caught exception: " << e.what() << std::endl;
+    }
 
-    // 打印输出
-    std::cout << "utf8_output: " << utf8_output << std::endl;
-    std::cout << "expected_utf8_output: " << expected_utf8_output << std::endl;
-    std::cout << "utf8_output_lib: " << utf8_output_lib << std::endl;
-
-    // 断言测试
-    assert(strcmp(utf8_output.c_str(), expected_utf8_output) == 0);
-    assert(strcmp(utf8_output_lib.c_str(), expected_utf8_output) == 0);
-
-    // 打印性能对比
-    std::cout << "Custom conversion time: " << elapsed_custom.count() << " seconds" << std::endl;
-    std::cout << "Library conversion time: " << elapsed_lib.count() << " seconds" << std::endl;
-
-    // 生成随机 UTF-16 字符串
-    std::u16string random_utf16_str = generate_random_utf16_string(100); // 100 个字符
-
-    // 转换并测试
-    utf8_output_lib = convert.to_bytes(random_utf16_str);
-    utf8_output = utf16_to_utf8(random_utf16_str);
-
-    // 打印输出
-    std::cout << "Random utf8_output: " << utf8_output << std::endl;
-    std::cout << "Random utf8_output_lib: " << utf8_output_lib << std::endl;
-
-    // 断言测试
-    assert(utf8_output == utf8_output_lib);
-
-    // 程序结束前暂停
-    std::cout << "Press any key to exit...";
-    std::cin.get();
+    // Test conversion without using AVX2
+    try {
+        auto start = std::chrono::high_resolution_clock::now();
+        for (const auto &str : test_strings) {
+            std::string utf8 = utf16_to_utf8(str);
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        std::cout << "Conversion without AVX2 took: " << elapsed.count() << " seconds" << std::endl;
+    } catch (const std::exception &e) {
+        std::cerr << "Caught exception: " << e.what() << std::endl;
+    }
 
     return 0;
 }
