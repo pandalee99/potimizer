@@ -1,25 +1,4 @@
 # ninja log v6
-1	331	7425897049773433	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-333	446	7425897053090553	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-5	981	7425971220605993	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-982	1111	7425971230377827	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-11	695	7425971698292983	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-695	787	7425971705130665	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-12	949	7425972401710502	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-950	1052	7425972411078796	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-10	727	7425973674424163	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-727	827	7425973681600113	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-13	740	7425974301697355	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-740	832	7425974308971125	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-11	731	7425974846655679	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-732	824	7425974853865291	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-4	678	7425975841169043	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-679	778	7425975847917091	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-4	664	7425976235112851	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-664	749	7425976241714349	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-4	704	7425977681623629	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-704	792	7425977688624125	string_utf16_to_utf8.exe	cb3f94f486d01eb1
-4	668	7425979507034314	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
-668	751	7425979513672348	string_utf16_to_utf8.exe	cb3f94f486d01eb1
 4	752	7425983028567815	CMakeFiles/string_utf16_to_utf8.dir/main.cpp.obj	352b344fa4480339
 753	847	7425983036063206	string_utf16_to_utf8.exe	cb3f94f486d01eb1
+2	477	7426481681482544	build.ninja	f5ab032f0d025e50
